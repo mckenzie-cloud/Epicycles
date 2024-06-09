@@ -36,7 +36,10 @@ int main(void)
 {
     int W = 500, H = 500;
     sf::RenderWindow window(sf::VideoMode(W, H), "App", sf::Style::Close);
-    window.setFramerateLimit(60);
+    // window.setFramerateLimit(60);
+
+    /* Activating vertical synchronization will limit the number of frames displayed to the refresh rate of the monitor. */
+    window.setVerticalSyncEnabled(true);
 
     std::vector<std::complex<double>> X_N{};
     std::vector<std::complex<double>> X_K{};
