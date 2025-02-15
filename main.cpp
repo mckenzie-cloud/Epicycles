@@ -55,8 +55,6 @@ int main(void)
 
     double animation_speeding_factor = 5.0f;
 
-    double px = 0, py = 0;
-
     bool draw = false;
 
     bool visualize = false;
@@ -88,14 +86,16 @@ int main(void)
 
     sf::Clock deltaClock;
 
+    int iter = 0;
+
     // run the program as long as the window is open
     while (window.isOpen())
     {
         // Get FPS
         sf::Time deltaTime = deltaClock.restart();
         double currentTime = deltaTime.asSeconds();
-        double fps = 1.0f / currentTime;
-        std::cout << fps << '\n';
+        // double fps = 1.0f / currentTime;
+        // std::cout << fps << '\n';
 
         // clear window
         window.clear(sf::Color(1, 22, 39, 255));
@@ -135,6 +135,8 @@ int main(void)
 
                         dt = TWO_PI / N;
 
+                        std::cout << "DT: " << dt << " N_POINTS: " << N << '\n';
+
                         for (int k = 0; k < N; k++)
                         {
                             /* code */
@@ -173,12 +175,11 @@ int main(void)
             {
                 if (event.key.scancode == sf::Keyboard::Scan::R)
                 {
-                    X_N.erase(X_N.begin(), X_N.end());
-                    X_K.erase(X_K.begin(), X_K.end());
-
-                    epicycles.erase(epicycles.begin(), epicycles.end());
-                    path.erase(path.begin(), path.end());
-                    circles.erase(circles.begin(), circles.end());
+                    X_N.clear();
+                    X_K.clear();
+                    epicycles.clear();
+                    path.clear();
+                    circles.clear();
 
                     visualize = false;
                     time = 0.0;
@@ -203,17 +204,23 @@ int main(void)
 
         if (visualize)
         {
-            double x = 0.0, y = 0.0;
+            struct Epicycle ep = epicycles[0];
+            double freq = ep.freq;
+            double radius = ep.radius;
+            double phase = ep.phase;
+
+            double x = radius * cosf(freq * time + phase);
+            double y = radius * sinf(freq * time + phase);
 
             /** Draw Epicycles */
-            for (int k = 0; k < (int)X_K.size(); k++)
+            for (int k = 1; k < (int)X_K.size(); k++)
             {
                 /* code */
 
                 struct Epicycle ep = epicycles[k];
-                double freq = ep.freq;
-                double radius = ep.radius;
-                double phase = ep.phase;
+                freq = ep.freq;
+                radius = ep.radius;
+                phase = ep.phase;
 
                 // Update position
                 double prev_x = x, prev_y = y;
@@ -233,11 +240,7 @@ int main(void)
             }
 
             /** avoid duplicate insertion. */
-            if (x != px && y != py)
-            {
-                path.insert(path.begin(), sf::Vector2f(x, y));
-                px = x, py = y;
-            }
+            path.push_back(sf::Vector2f(x, y));
 
             // draw the path
             for (size_t p = 0; p < path.size() - 1; p++)
@@ -254,13 +257,15 @@ int main(void)
             if (a > max_t)
             {
                 time += dt; // update time
+                iter++;
                 a = 0.0f;
             }
 
-            if (time > TWO_PI) // 1 revolution,
+            if (time >= TWO_PI) // 1 revolution,
             {
                 time = 0.0; // reset time
-                path.erase(path.begin(), path.end());
+                iter = 0;
+                path.clear();
             }
         }
         window.display();
